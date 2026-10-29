@@ -1,6 +1,8 @@
 # Reproduction
 
-Use Python 3.13 and `uv`. `uv.lock` pins library builds. Synthetic sweeps use a single head, independent float32 Gaussian Q/K/V, seeds 3/17/29, dimensions 64/128, and causal/non-causal settings. No GPU or paid service is used. The experiments collect errors, not speed; do not interpret run wall-clock logs as benchmarks.
+Use Python 3.13 and `uv`. `uv.lock` pins library builds. CPU emulation, real-kernel head/loss measurements, and fixed-item answer accuracy are separate studies below. Regenerating reports from committed records needs no GPU or paid service; repeating the hardware measurements does. The experiments collect errors and accuracy, not speed; do not interpret run wall-clock logs as benchmarks.
+
+The public project is **temperament**. The Python distribution remains `attention-numerics` to preserve its locked environment identity; module names (`study`, `attention`), cache/environment-variable names and recorded cloud resource IDs are unchanged. Those are compatibility/provenance identifiers, not the display name.
 
 ## Checks, exactly as CI
 
@@ -25,6 +27,8 @@ Tests include exact uniform attention/prefix means and a two-key logistic answer
 ## Synthetic studies
 
 Run each study separately with single-thread BLAS. Long-context studies are compute-intensive despite bounded working memory.
+Synthetic sweeps use a single head, independent float32 Gaussian Q/K/V, seeds 3/17/29, dimensions 64/128, and causal/non-causal settings. These are CPU simulations, not hardware accuracy measurements.
+
 
 ```
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
@@ -81,6 +85,45 @@ nice -n 19 uv run python diagnosis.py --checkpoint-header "$HF_HOME/hub/models--
 That optional flag only inspects the cached safetensors header for bias tensor names/shapes; it does not load tensor contents or rehash the full checkpoint. Omit it if weights are not cached. It changes only the header-corroboration metadata, not the accuracy results. [MODEL.md](MODEL.md#rotation-diagnosis) defines normalized pre-probability-rounding TV and the score-only output comparison.
 
 Recorded checkpoint paths in `diagnosis.json` use the portable `$HF_HOME/hub/...` form. This path-label normalization leaves every numerical result, snapshot revision and file hash unchanged.
+
+## Public numerical regression corpus
+
+[data/regression/cases.npz](../data/regression/cases.npz) is a compact public input/output
+corpus for numerical checks without Torch, model downloads or GPU access.
+Its [manifest](../data/regression/manifest.json) records source hashes, model/text
+provenance, licenses, shapes and every emulator setting. Rebuild it with:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 uv run python -m study.regression
+uv run pytest -q tests/test_regression.py
+```
+
+It contains five causal 128-token, 64-channel cases: the first 128 tokens of the
+original public Qwen0.5B layer-0/head-0 and layer-12/head-0 capture (rotation harms
+and helps, respectively, under this emulator), plus matched synthetic base,
+constant additive-key-bias and all-keys-constant controls. These were chosen as
+regression examples, not a representative head sample or a new hardware result.
+The synthetic operands are dyadic, so adding 32 to one K channel preserves its
+residual exactly; the all-constant control's exact output is the causal prefix
+mean of V.
+
+Load with `np.load("data/regression/cases.npz", allow_pickle=False)`. Array names
+start with the case name in the manifest: `_q`, `_k`, `_v` are original float32
+operands; `_reference` is causal original-operand FP64 output. Each variant suffix
+(`_e4_tile`, `_e4_rotate`, `_e4_smooth_tile`, `_e4_smooth_rotate`) stores the
+emulated output. Variant suffixes followed by `_q_bits`/`_k_bits` contain raw
+E4M3FN uint8 encodings; `_q_scale`/`_k_scale` contain per-token float32 descales.
+Those packing bytes are exact regression targets. The CPU tests also compare
+reference outputs to an independent dense FP64 implementation, check centering
+and shared-rotation invariance, check both rotation-effect signs and provenance,
+and rebuild twice for determinism.
+
+This is **CPU-emulator arithmetic**, with Q32/K128 scaling, E4M3 Q/K/P/V and BF16
+output; it is not the full-sequence-scaled FA3 or Sage hardware arithmetic.
+The tests use `rtol=1e-10, atol=1e-11` for FP64 reference invariants and
+`rtol=1e-5, atol=1e-6` for emulated outputs, not bit-exact GPU output equality.
+The public corpus does not replace or make public the larger private
+hardware-study operand bundle.
 
 ## All-layer multi-model study
 
@@ -251,14 +294,52 @@ candidate tokens.
 
 ### Paired analysis
 
-The primary measure is variant accuracy minus BF16 accuracy on identical items.
+The originally planned measure is variant accuracy minus BF16 accuracy on identical items.
 I use 20,000 deterministic paired bootstrap resamples and a percentile 95%
 interval. Resampling counts of the paired item differences (−1, 0, +1) is
 distributionally equivalent to resampling items, without a large replicate-by-item
 array. A variant meets the fixed harm rule only for a drop of at least 2
-percentage points **and** an upper interval endpoint below zero. All planned
-model/task/variant comparisons are reported; intervals are not familywise
-multiple-comparison corrections or universal-model guarantees.
+percentage points **and** an upper interval endpoint below zero. These flags measure
+total degradation versus BF16; they do **not** isolate rotation. All planned
+model/task/variant comparisons are reported.
+
+I additionally report four direct, exploratory intervention contrasts for every
+checkpoint and task, using the same committed answers:
+
+| Contrast | Candidate minus baseline |
+|---|---|
+| Rotate − plain | `rotate − tile` |
+| Center − plain | `smooth_k − tile` |
+| Center rotated − rotated | `rotate_smooth_k − rotate` |
+| Rotate centered − centered | `rotate_smooth_k − smooth_k` |
+
+The last two distinguish centering an already-rotated condition from adding
+rotation after centering. Each contrast changes one preprocessing choice while
+holding checkpoint, items and FA3 configuration fixed. They do not identify a
+universal mechanism or a population-wide model effect. The contrasts were added
+after inspecting the answers, not preregistered in the scoring plans.
+
+Each item is paired by `(task, item_id)` within a model, never by raw record
+position. For each contrast I bootstrap its own paired correctness difference,
+not the difference of two BF16-relative intervals. The base seed remains the
+plan's `20261007`. The independent PCG64 stream seed is the big-endian integer
+from the first 16 bytes of SHA256 of compact JSON
+`[seed, model, task, ["intervention", candidate, baseline]]`.
+Thus file/iteration order does not change an interval. Percentiles use NumPy's
+linear quantile interpolation. The JSON `interventions` rows retain both variant
+names, accuracies, denominator, beneficial/harmed/tied pair counts, delta, interval
+and stream seed. Positive deltas mean more correct answers.
+
+This CPU-only command rebuilds all eight checkpoints' JSON and BF16-relative
+figure and prints the exact direct-contrast Markdown table used in the README:
+
+```sh
+uv run python -m study.accuracy.report --additional-plan data/accuracy/qwen14-plan.json --additional-plan data/accuracy/smol17-plan.json
+```
+
+Intervals resample items, not models, hardware configurations or prompt choices.
+They are not familywise multiple-comparison corrections, simultaneous intervals,
+or universal-model guarantees; absence of a BF16 harm flag is not equivalence.
 
 ### Models, licenses and cloud stages
 

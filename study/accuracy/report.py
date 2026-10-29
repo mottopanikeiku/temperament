@@ -1,6 +1,6 @@
 """Validate complete multiple-choice runs and report paired accuracy changes.
 
-Rebuild the committed eight-checkpoint summary; omitting an extension plan drops its rows:
+Rebuild the committed eight-checkpoint summary and print its direct-contrast table:
 
 python -m study.accuracy.report
     --additional-plan data/accuracy/qwen14-plan.json
@@ -20,6 +20,13 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 VARIANTS = ("bf16", "tile", "rotate", "smooth_k", "rotate_smooth_k")
+# Candidate minus baseline; together these are the four edges of the 2x2 intervention.
+INTERVENTIONS = (
+    ("rotate", "tile"),
+    ("smooth_k", "tile"),
+    ("rotate_smooth_k", "rotate"),
+    ("rotate_smooth_k", "smooth_k"),
+)
 LIMITATIONS = [
     "Zero-shot standard harness prompts, without chat templates; not a chat evaluation.",
     "ARC-Challenge uses its full test split; HellaSwag and MMLU use fixed 2,000-item "
@@ -297,18 +304,24 @@ def paired_change(baseline, candidate, seed, replicates=20000):
 def summarize(plan, items, runs):
     expected_models = {model["key"] for model in plan["models"]}
     _require(set(runs) == expected_models, "Incomplete model coverage")
-    rows = []
+    rows, interventions = [], []
     bootstrap = plan["bootstrap"]
     rule = plan["harm_rule"]
     for model in plan["models"]:
         key = model["key"]
         for task, spec in plan["tasks"].items():
             identities = sorted(identity for identity in items if identity[0] == task)
-            baseline = [runs[key][(*identity, "bf16")]["correct"] for identity in identities]
+            answers = {
+                variant: np.array(
+                    [runs[key][(*identity, variant)]["correct"] for identity in identities]
+                )
+                for variant in plan["variants"]
+            }
             for variant in plan["variants"]:
                 seed = stream_seed(bootstrap["seed"], key, task, variant)
-                candidate = [runs[key][(*identity, variant)]["correct"] for identity in identities]
-                change = paired_change(baseline, candidate, seed, bootstrap["replicates"])
+                change = paired_change(
+                    answers["bf16"], answers[variant], seed, bootstrap["replicates"]
+                )
                 change.update(
                     {
                         "model": key,
@@ -322,6 +335,26 @@ def summarize(plan, items, runs):
                     }
                 )
                 rows.append(change)
+            for candidate, baseline in INTERVENTIONS:
+                seed = stream_seed(
+                    bootstrap["seed"], key, task, ["intervention", candidate, baseline]
+                )
+                change = paired_change(
+                    answers[baseline], answers[candidate], seed, bootstrap["replicates"]
+                )
+                change.update(
+                    {
+                        "model": key,
+                        "checkpoint": model.get("repo_id", key).split("/")[-1],
+                        "revision": model["revision"],
+                        "task": task,
+                        "candidate_variant": candidate,
+                        "baseline_variant": baseline,
+                        "primary_metric": spec["metric"],
+                        "bootstrap_seed": seed,
+                    }
+                )
+                interventions.append(change)
     return {
         "schema_version": 1,
         "complete": True,
@@ -334,7 +367,37 @@ def summarize(plan, items, runs):
         "denominators": {task: spec["count"] for task, spec in plan["tasks"].items()},
         "sample_limitations": LIMITATIONS,
         "rows": rows,
+        "interventions": interventions,
     }
+
+
+def intervention_table(summary):
+    """Render all model/task direct contrasts in README-ready percentage points."""
+    headings = (
+        "Rotate − plain",
+        "Center − plain",
+        "Center rotated − rotated",
+        "Rotate centered − centered",
+    )
+    tasks = {"arc_challenge": "ARC", "hellaswag": "HellaSwag", "mmlu": "MMLU"}
+    rows = summary["interventions"]
+    groups = list(dict.fromkeys((row["model"], row["task"]) for row in rows))
+    indexed = {
+        (row["model"], row["task"], row["candidate_variant"], row["baseline_variant"]): row
+        for row in rows
+    }
+    lines = [
+        "| Checkpoint / task | " + " | ".join(headings) + " |",
+        "|---|" + "---:|" * len(headings),
+    ]
+    for model, task in groups:
+        cells = []
+        for candidate, baseline in INTERVENTIONS:
+            row = indexed[model, task, candidate, baseline]
+            delta, low, high = (100 * value for value in (row["delta"], *row["ci95"]))
+            cells.append(f"{delta:+.2f} [{low:+.2f}, {high:+.2f}]".replace("-", "−"))
+        lines.append(f"| {row['checkpoint']} / {tasks[task]} | " + " | ".join(cells) + " |")
+    return "\n".join(lines)
 
 
 def paired_figure(summary):
@@ -510,6 +573,7 @@ def build_report(results_dir, plan_path, items_path, additional_plans=()):
         extra_models = {row["model"] for row in extra["rows"]}
         _require(existing_models.isdisjoint(extra_models), "Repeated model across plans")
         summary["rows"].extend(extra["rows"])
+        summary["interventions"].extend(extra["interventions"])
         for entry in extra["primary_evidence"]:
             summary["primary_evidence"].append({**entry, "path": f"{subdirectory}/{entry['path']}"})
         summary.setdefault("additional_plans", []).append(
@@ -531,9 +595,10 @@ def main():
     parser.add_argument("--additional-plan", type=Path, action="append", default=[])
     args = parser.parse_args()
     try:
-        build_report(args.results_dir, args.plan, args.items, args.additional_plan)
+        summary = build_report(args.results_dir, args.plan, args.items, args.additional_plan)
     except (ValueError, OSError) as error:
         parser.error(str(error))
+    print(intervention_table(summary))
 
 
 if __name__ == "__main__":
