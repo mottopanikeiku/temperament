@@ -29,7 +29,6 @@ Tests include exact uniform attention/prefix means and a two-key logistic answer
 Run each study separately with single-thread BLAS. Long-context studies are compute-intensive despite bounded working memory.
 Synthetic sweeps use a single head, independent float32 Gaussian Q/K/V, seeds 3/17/29, dimensions 64/128, and causal/non-causal settings. These are CPU simulations, not hardware accuracy measurements.
 
-
 ```
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 nice -n 19 uv run python sweep.py --study length
