@@ -1,6 +1,8 @@
-# attention-numerics
+# temperament
 
 I measure how FP8 attention changes multiple-choice answers.
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/hero-dark.svg"><img alt="Qwen2.5-7B HellaSwag accuracy with FlashAttention-3 on one H100: 80.9% BF16, 63.7% FP8, 45.5% FP8 with rotated queries and keys, 81.0% when the keys are also centered." src="docs/hero-light.svg" width="600"></picture>
 
 **Question:** Does rotating queries and keys before rounding hurt answer accuracy, and does centering keys first help?
 
@@ -15,7 +17,7 @@ uv sync --locked --python 3.13
 uv run python -m study.accuracy.report --additional-plan data/accuracy/qwen14-plan.json --additional-plan data/accuracy/smol17-plan.json
 ```
 
-[Interactive mechanism and earlier emulated-head study](https://mottopanikeiku.github.io/attention-numerics/).
+[Interactive mechanism and earlier emulated-head study](https://mottopanikeiku.github.io/temperament/).
 
 ## Answer accuracy
 
