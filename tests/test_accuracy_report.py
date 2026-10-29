@@ -11,8 +11,10 @@ import numpy as np
 import pytest
 
 from study.accuracy.report import (
+    INTERVENTIONS,
     VARIANTS,
     build_report,
+    intervention_table,
     paired_change,
     paired_figure,
     stream_seed,
@@ -195,9 +197,118 @@ def test_all_models_tasks_variants_metrics_and_denominators_reported(frozen):
     assert "minus two percentage points" in figure
 
 
+def test_direct_contrasts_cover_every_model_task_and_four_interventions(frozen):
+    plan, items, runs = checked(frozen)
+    summary = summarize(plan, items, runs)
+    assert len(summary["interventions"]) == 6 * 3 * 4
+    assert {
+        (row["model"], row["task"], row["candidate_variant"], row["baseline_variant"])
+        for row in summary["interventions"]
+    } == {
+        (model["key"], task, candidate, baseline)
+        for model in plan["models"]
+        for task in plan["tasks"]
+        for candidate, baseline in INTERVENTIONS
+    }
+    for row in summary["interventions"]:
+        assert row["denominator"] == plan["tasks"][row["task"]]["count"]
+        assert row["delta"] == 0 and row["ci95"] == [0, 0]
+        assert row["primary_metric"] == plan["tasks"][row["task"]]["metric"]
+        assert row["revision"] == next(
+            model["revision"] for model in plan["models"] if model["key"] == row["model"]
+        )
+        assert "harm_flag" not in row  # BF16-relative flags do not attribute rotation.
+
+
+def test_direct_contrasts_pair_by_task_and_id_not_record_order(frozen):
+    plan, manifest, raw = frozen
+    # Reuse IDs across tasks; the pairing key must include both fields.
+    for item in manifest["items"]:
+        item["item_id"] = item["item_id"].split(":")[-1]
+    answers = {
+        "bf16": [True, True, True, True],
+        "tile": [True, False, True, False],
+        "rotate": [False, False, True, False],
+        "smooth_k": [True, True, True, False],
+        "rotate_smooth_k": [True, True, False, True],
+    }
+    for run in raw.values():
+        for row in run["rows"]:
+            row["item_id"] = row["item_id"].split(":")[-1]
+            if row["task"] != "mmlu":
+                continue
+            correct = answers[row["variant"]][int(row["item_id"])]
+            prediction = row["gold"] if correct else 1 - row["gold"]
+            scores = [-2.0, -2.0]
+            scores[prediction] = -1.0
+            row.update(
+                correct=correct,
+                prediction=prediction,
+                choice_log_likelihoods=scores.copy(),
+                choice_scores=scores.copy(),
+            )
+        np.random.default_rng(87).shuffle(run["rows"])
+    checked_plan, items, runs = checked(frozen)
+    summary = summarize(checked_plan, items, runs)
+    rows = [
+        row for row in summary["interventions"] if row["model"] == "qwen7" and row["task"] == "mmlu"
+    ]
+    expected_counts = [(0, 1, 3), (1, 0, 3), (3, 1, 0), (1, 1, 2)]
+    for row, (candidate, baseline), counts in zip(
+        rows, INTERVENTIONS, expected_counts, strict=True
+    ):
+        seed = stream_seed(
+            plan["bootstrap"]["seed"], "qwen7", "mmlu", ["intervention", candidate, baseline]
+        )
+        expected = paired_change(answers[baseline], answers[candidate], seed)
+        assert {key: row[key] for key in expected} == expected
+        assert (row["beneficial"], row["harmed"], row["tied"]) == counts
+        assert row["bootstrap_seed"] == seed
+    assert [row["delta"] for row in rows] == [-0.25, 0.25, 0.5, 0]
+    # Same marginal accuracy is not a zero-variance paired effect.
+    assert rows[-1]["ci95"][0] < 0 < rows[-1]["ci95"][1]
+    # Reordering models, tasks, item IDs and raw records changes no row or stream.
+    plan["models"].reverse()
+    plan["tasks"] = dict(reversed(list(plan["tasks"].items())))
+    manifest["items"].reverse()
+    for run in raw.values():
+        run["rows"].reverse()
+    reordered = summarize(*checked(frozen))
+
+    def identity(row):
+        return row["model"], row["task"], row["candidate_variant"], row["baseline_variant"]
+
+    assert sorted(summary["interventions"], key=identity) == sorted(
+        reordered["interventions"], key=identity
+    )
+
+
+def test_intervention_table_formats_percentage_points_and_both_interval_endpoints():
+    rows = [
+        {
+            "model": "qwen7",
+            "checkpoint": "Qwen2.5-7B-Instruct",
+            "task": "hellaswag",
+            "candidate_variant": candidate,
+            "baseline_variant": baseline,
+            "delta": -0.182,
+            "ci95": [-0.2095, -0.1545],
+        }
+        for candidate, baseline in INTERVENTIONS
+    ]
+    table = intervention_table({"interventions": rows})
+    assert table.splitlines()[0] == (
+        "| Checkpoint / task | Rotate − plain | Center − plain | "
+        "Center rotated − rotated | Rotate centered − centered |"
+    )
+    assert table.splitlines()[2] == (
+        "| Qwen2.5-7B-Instruct / HellaSwag | " + " | ".join(["−18.20 [−20.95, −15.45]"] * 4) + " |"
+    )
+
+
 def test_harm_flag_requires_both_conditions_and_includes_exact_threshold(frozen, monkeypatch):
     plan, items, runs = checked(frozen)
-    conditions = iter([(-0.02, -0.001), (-0.019, -0.001), (-0.03, 0), (-0.1, 0.01)] * 23)
+    conditions = itertools.cycle([(-0.02, -0.001), (-0.019, -0.001), (-0.03, 0), (-0.1, 0.01)])
 
     def change(*args):
         delta, upper = next(conditions)
@@ -394,6 +505,8 @@ def test_additional_plan_preserves_original_plan_and_rejects_design_changes(
         return
     summary = build_report(results, plan_path, items, [extension_path])
     assert len(summary["rows"]) == 105
+    assert len(summary["interventions"]) == 7 * 3 * 4
+    assert len([row for row in summary["interventions"] if row["model"] == extra_key]) == 12
     assert len(summary["primary_evidence"]) == 7
     assert summary["primary_evidence"][-1]["path"] == "qwen14/qwen14.json.gz"
     assert summary["additional_plans"][0]["sha256"] == extra_run["plan_sha256"]

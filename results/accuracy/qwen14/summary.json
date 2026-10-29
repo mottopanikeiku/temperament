@@ -336,6 +336,260 @@
       "harm_flag": false
     }
   ],
+  "interventions": [
+    {
+      "denominator": 1172,
+      "baseline_accuracy": 0.6203071672354948,
+      "accuracy": 0.6177474402730375,
+      "delta": -0.002559726962457338,
+      "ci95": [
+        -0.015358361774744027,
+        0.010238907849829351
+      ],
+      "beneficial": 28,
+      "harmed": 31,
+      "tied": 1113,
+      "model": "qwen14",
+      "checkpoint": "Qwen2.5-14B-Instruct",
+      "revision": "cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8",
+      "task": "arc_challenge",
+      "candidate_variant": "rotate",
+      "baseline_variant": "tile",
+      "primary_metric": "acc_norm",
+      "bootstrap_seed": 175938516981954712944974936046347262300
+    },
+    {
+      "denominator": 1172,
+      "baseline_accuracy": 0.6203071672354948,
+      "accuracy": 0.613481228668942,
+      "delta": -0.006825938566552901,
+      "ci95": [
+        -0.020477815699658702,
+        0.006825938566552901
+      ],
+      "beneficial": 28,
+      "harmed": 36,
+      "tied": 1108,
+      "model": "qwen14",
+      "checkpoint": "Qwen2.5-14B-Instruct",
+      "revision": "cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8",
+      "task": "arc_challenge",
+      "candidate_variant": "smooth_k",
+      "baseline_variant": "tile",
+      "primary_metric": "acc_norm",
+      "bootstrap_seed": 81150686860900120447083282550141122541
+    },
+    {
+      "denominator": 1172,
+      "baseline_accuracy": 0.6177474402730375,
+      "accuracy": 0.6168941979522184,
+      "delta": -0.0008532423208191126,
+      "ci95": [
+        -0.011092150170648464,
+        0.00938566552901024
+      ],
+      "beneficial": 19,
+      "harmed": 20,
+      "tied": 1133,
+      "model": "qwen14",
+      "checkpoint": "Qwen2.5-14B-Instruct",
+      "revision": "cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8",
+      "task": "arc_challenge",
+      "candidate_variant": "rotate_smooth_k",
+      "baseline_variant": "rotate",
+      "primary_metric": "acc_norm",
+      "bootstrap_seed": 129226080634502140628829968293699163288
+    },
+    {
+      "denominator": 1172,
+      "baseline_accuracy": 0.613481228668942,
+      "accuracy": 0.6168941979522184,
+      "delta": 0.0034129692832764505,
+      "ci95": [
+        -0.00938566552901024,
+        0.016211604095563138
+      ],
+      "beneficial": 31,
+      "harmed": 27,
+      "tied": 1114,
+      "model": "qwen14",
+      "checkpoint": "Qwen2.5-14B-Instruct",
+      "revision": "cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8",
+      "task": "arc_challenge",
+      "candidate_variant": "rotate_smooth_k",
+      "baseline_variant": "smooth_k",
+      "primary_metric": "acc_norm",
+      "bootstrap_seed": 183685390563074684252492157471428735775
+    },
+    {
+      "denominator": 2000,
+      "baseline_accuracy": 0.8525,
+      "accuracy": 0.853,
+      "delta": 0.0005,
+      "ci95": [
+        -0.0035,
+        0.0045
+      ],
+      "beneficial": 8,
+      "harmed": 7,
+      "tied": 1985,
+      "model": "qwen14",
+      "checkpoint": "Qwen2.5-14B-Instruct",
+      "revision": "cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8",
+      "task": "hellaswag",
+      "candidate_variant": "rotate",
+      "baseline_variant": "tile",
+      "primary_metric": "acc_norm",
+      "bootstrap_seed": 311628229941333084678746087139775309977
+    },
+    {
+      "denominator": 2000,
+      "baseline_accuracy": 0.8525,
+      "accuracy": 0.852,
+      "delta": -0.0005,
+      "ci95": [
+        -0.005,
+        0.004
+      ],
+      "beneficial": 9,
+      "harmed": 10,
+      "tied": 1981,
+      "model": "qwen14",
+      "checkpoint": "Qwen2.5-14B-Instruct",
+      "revision": "cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8",
+      "task": "hellaswag",
+      "candidate_variant": "smooth_k",
+      "baseline_variant": "tile",
+      "primary_metric": "acc_norm",
+      "bootstrap_seed": 120414743803107872514658037428618240337
+    },
+    {
+      "denominator": 2000,
+      "baseline_accuracy": 0.853,
+      "accuracy": 0.853,
+      "delta": 0.0,
+      "ci95": [
+        -0.0035,
+        0.0035
+      ],
+      "beneficial": 6,
+      "harmed": 6,
+      "tied": 1988,
+      "model": "qwen14",
+      "checkpoint": "Qwen2.5-14B-Instruct",
+      "revision": "cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8",
+      "task": "hellaswag",
+      "candidate_variant": "rotate_smooth_k",
+      "baseline_variant": "rotate",
+      "primary_metric": "acc_norm",
+      "bootstrap_seed": 11572922408582862113682275240289521768
+    },
+    {
+      "denominator": 2000,
+      "baseline_accuracy": 0.852,
+      "accuracy": 0.853,
+      "delta": 0.001,
+      "ci95": [
+        -0.003,
+        0.005
+      ],
+      "beneficial": 9,
+      "harmed": 7,
+      "tied": 1984,
+      "model": "qwen14",
+      "checkpoint": "Qwen2.5-14B-Instruct",
+      "revision": "cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8",
+      "task": "hellaswag",
+      "candidate_variant": "rotate_smooth_k",
+      "baseline_variant": "smooth_k",
+      "primary_metric": "acc_norm",
+      "bootstrap_seed": 81976441686567733258650210927951585000
+    },
+    {
+      "denominator": 2000,
+      "baseline_accuracy": 0.783,
+      "accuracy": 0.788,
+      "delta": 0.005,
+      "ci95": [
+        -0.0015,
+        0.012
+      ],
+      "beneficial": 29,
+      "harmed": 19,
+      "tied": 1952,
+      "model": "qwen14",
+      "checkpoint": "Qwen2.5-14B-Instruct",
+      "revision": "cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8",
+      "task": "mmlu",
+      "candidate_variant": "rotate",
+      "baseline_variant": "tile",
+      "primary_metric": "acc",
+      "bootstrap_seed": 125686700368025915654976670811477135641
+    },
+    {
+      "denominator": 2000,
+      "baseline_accuracy": 0.783,
+      "accuracy": 0.786,
+      "delta": 0.003,
+      "ci95": [
+        -0.0035,
+        0.0095
+      ],
+      "beneficial": 26,
+      "harmed": 20,
+      "tied": 1954,
+      "model": "qwen14",
+      "checkpoint": "Qwen2.5-14B-Instruct",
+      "revision": "cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8",
+      "task": "mmlu",
+      "candidate_variant": "smooth_k",
+      "baseline_variant": "tile",
+      "primary_metric": "acc",
+      "bootstrap_seed": 292933393780846199133919400372773019958
+    },
+    {
+      "denominator": 2000,
+      "baseline_accuracy": 0.788,
+      "accuracy": 0.788,
+      "delta": 0.0,
+      "ci95": [
+        -0.0055,
+        0.0055
+      ],
+      "beneficial": 16,
+      "harmed": 16,
+      "tied": 1968,
+      "model": "qwen14",
+      "checkpoint": "Qwen2.5-14B-Instruct",
+      "revision": "cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8",
+      "task": "mmlu",
+      "candidate_variant": "rotate_smooth_k",
+      "baseline_variant": "rotate",
+      "primary_metric": "acc",
+      "bootstrap_seed": 214526229123241849404218771542711567909
+    },
+    {
+      "denominator": 2000,
+      "baseline_accuracy": 0.786,
+      "accuracy": 0.788,
+      "delta": 0.002,
+      "ci95": [
+        -0.0035,
+        0.0075
+      ],
+      "beneficial": 18,
+      "harmed": 14,
+      "tied": 1968,
+      "model": "qwen14",
+      "checkpoint": "Qwen2.5-14B-Instruct",
+      "revision": "cf98f3b3bbb457ad9e2bb7baf9a0125b6b88caa8",
+      "task": "mmlu",
+      "candidate_variant": "rotate_smooth_k",
+      "baseline_variant": "smooth_k",
+      "primary_metric": "acc",
+      "bootstrap_seed": 6965314720193227829376979120114450128
+    }
+  ],
   "plan_sha256": "0fb0b9541a37575772e8b2848aaf64c06e684037443f54be54c015aaf936d28e",
   "item_manifest_sha256": "c6e424668137fee31d143d729b9f9d14e73257804c1daf2ad2fb14f2f642ab8c",
   "primary_evidence": [

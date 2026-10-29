@@ -9,3 +9,10 @@ The model is distributed by the Qwen team under Apache-2.0; a copy of its
 license is in LICENSE-APACHE. Model weights are not included in this repository.
 The capture records actual CPU BF16 forward-pass Q/K/V from the specified
 layers and heads; it is not a GPU measurement or a model-quality evaluation.
+
+regression/cases.npz includes unchanged 128-token prefixes of layer 0/head 0
+and layer 12/head 0 from qwen-qkv.npz, plus synthetic constant-bias controls.
+regression/manifest.json records source hashes and emulator configurations.
+Reference and emulated outputs were recomputed from these operands by
+study/regression.py. They are CPU numerical regression examples, not the
+private hardware-study input bundle or measured GPU outputs.
