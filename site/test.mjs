@@ -61,7 +61,7 @@ test('The intro links real-kernel accuracy separately from unchanged emulation s
   const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
   assert.match(html, /Real FlashAttention-3 \(FA3\)/);
   assert.match(html, /id="accuracy-result"/);
-  assert.match(html, /href="https:\/\/github.com\/mottopanikeiku\/attention-numerics#answer-accuracy"/);
+  assert.match(html, /href="https:\/\/github.com\/mottopanikeiku\/temperament#answer-accuracy"/);
   assert.ok(html.indexOf('id="accuracy-result"') < html.indexOf('Earlier CPU FP8 emulation'));
   assert.ok(html.indexOf('Earlier CPU FP8 emulation') < html.indexOf('class="stats"'));
   for (const text of ['250 / 2,880', '0.978 AUC', '1.91×', 'CPU FP8 emulation results']) assert.ok(html.includes(text));

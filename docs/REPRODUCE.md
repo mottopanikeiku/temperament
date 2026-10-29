@@ -120,7 +120,7 @@ teacher-forced measurements**, not streaming-decoder perplexity or generation.
 [design.json](../data/v2/design.json) lists development, calibration, and untouched
 evaluation models and fixes the zero-threshold rotation-harm rule and prefix-sink
 definition. Prediction code, thresholds, and model lists were published in
-[f756745 (now tagged prediction-locked)](https://github.com/mottopanikeiku/attention-numerics/tree/prediction-locked) before
+[f756745 (now tagged prediction-locked)](https://github.com/mottopanikeiku/temperament/tree/prediction-locked) before
 any untouched evaluation checkpoint was loaded. The error model and its omissions
 are derived in [V2_PREDICTION.md](V2_PREDICTION.md). The parameter-free rule uses
 Q/K quantization-error statistics and ideal attention sensitivity, not measured
@@ -208,9 +208,9 @@ Elapsed records size the paid experiments and bound their cost, not benchmark la
 ## Fixed-item multiple-choice accuracy
 
 The [plan](../data/accuracy/plan.json) was published in
-[3f3d929](https://github.com/mottopanikeiku/attention-numerics/tree/3f3d929/data/accuracy)
+[3f3d929](https://github.com/mottopanikeiku/temperament/tree/3f3d929/data/accuracy)
 before accuracy outcomes. Every selected item ID and rendered prompt was published
-in [dcefbf2](https://github.com/mottopanikeiku/attention-numerics/tree/dcefbf2/data/accuracy)
+in [dcefbf2](https://github.com/mottopanikeiku/temperament/tree/dcefbf2/data/accuracy)
 before the first GPU accuracy pilot. [Selection](../data/accuracy/selection.json)
 and [compressed items](../data/accuracy/items.json.gz) record the full 1,172-item
 ARC-Challenge test, fixed uniform 2,000-item HellaSwag validation sample and fixed

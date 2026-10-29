@@ -1,4 +1,4 @@
-# attention-numerics
+# temperament
 
 I measure how FP8 attention changes multiple-choice answers.
 
@@ -17,7 +17,7 @@ uv sync --locked --python 3.13
 uv run python -m study.accuracy.report --additional-plan data/accuracy/qwen14-plan.json --additional-plan data/accuracy/smol17-plan.json
 ```
 
-[Interactive mechanism and earlier emulated-head study](https://mottopanikeiku.github.io/attention-numerics/).
+[Interactive mechanism and earlier emulated-head study](https://mottopanikeiku.github.io/temperament/).
 
 ## Answer accuracy
 
