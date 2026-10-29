@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "description": "CPU emulator regression examples; not FA3/Sage expected outputs",
+  "source": {
+    "path": "data/qwen-qkv.npz",
+    "sha256": "74a110a5d9d1942121d8967f58595112c1e5d287828aac5b53ac8540cb92fe34",
+    "model": "Qwen/Qwen2.5-0.5B-Instruct",
+    "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+    "license": "Apache-2.0",
+    "text": "Lewis Carroll, Alice's Adventures in Wonderland, chapter I, public domain in the US; https://www.gutenberg.org/files/11/11-0.txt"
+  },
+  "shape": [
+    128,
+    64
+  ],
+  "causal": true,
+  "reference": "Unquantized original Q/K/V, float64 causal softmax(QK^T / sqrt(64)) V",
+  "variants": {
+    "e4_tile": {
+      "storage": "e4m3",
+      "tile": 128,
+      "query_tile": 32,
+      "scaling": "tile",
+      "accumulator": "fp32",
+      "promote": 0,
+      "probability": null,
+      "output": "bf16",
+      "rotate": false,
+      "smooth_k": false,
+      "compensated": false,
+      "update": "global",
+      "order": "forward",
+      "causal": true,
+      "scale": null,
+      "smooth_q": false,
+      "sign_seed": 1729
+    },
+    "e4_rotate": {
+      "storage": "e4m3",
+      "tile": 128,
+      "query_tile": 32,
+      "scaling": "tile",
+      "accumulator": "fp32",
+      "promote": 0,
+      "probability": null,
+      "output": "bf16",
+      "rotate": true,
+      "smooth_k": false,
+      "compensated": false,
+      "update": "global",
+      "order": "forward",
+      "causal": true,
+      "scale": null,
+      "smooth_q": false,
+      "sign_seed": 1729
+    },
+    "e4_smooth_tile": {
+      "storage": "e4m3",
+      "tile": 128,
+      "query_tile": 32,
+      "scaling": "tile",
+      "accumulator": "fp32",
+      "promote": 0,
+      "probability": null,
+      "output": "bf16",
+      "rotate": false,
+      "smooth_k": true,
+      "compensated": false,
+      "update": "global",
+      "order": "forward",
+      "causal": true,
+      "scale": null,
+      "smooth_q": false,
+      "sign_seed": 1729
+    },
+    "e4_smooth_rotate": {
+      "storage": "e4m3",
+      "tile": 128,
+      "query_tile": 32,
+      "scaling": "tile",
+      "accumulator": "fp32",
+      "promote": 0,
+      "probability": null,
+      "output": "bf16",
+      "rotate": true,
+      "smooth_k": true,
+      "compensated": false,
+      "update": "global",
+      "order": "forward",
+      "causal": true,
+      "scale": null,
+      "smooth_q": false,
+      "sign_seed": 1729
+    }
+  },
+  "arrays": "<case>_{q,k,v,reference,<variant>,<variant>_{q,k}_{bits,scale}}",
+  "cases_sha256": "bd4b5ac14ec1d5cdd13cd9da727c93d01d7d90fdaf0ae7d5262a97c99cbbabf7",
+  "cases": [
+    {
+      "name": "qwen_layer0_head0",
+      "kind": "captured",
+      "layer": 0,
+      "head": 0,
+      "token_slice": [
+        0,
+        128
+      ],
+      "rotation_effect": "harmed",
+      "relative_frobenius": {
+        "e4_tile": 0.2261932296755018,
+        "e4_rotate": 1.0893906215416667,
+        "e4_smooth_tile": 0.03766052299823782,
+        "e4_smooth_rotate": 0.438967591369313
+      }
+    },
+    {
+      "name": "qwen_layer12_head0",
+      "kind": "captured",
+      "layer": 12,
+      "head": 0,
+      "token_slice": [
+        0,
+        128
+      ],
+      "rotation_effect": "helped",
+      "relative_frobenius": {
+        "e4_tile": 0.06636372787694796,
+        "e4_rotate": 0.05404811746609482,
+        "e4_smooth_tile": 0.07754572133177727,
+        "e4_smooth_rotate": 0.04736241292889937
+      }
+    },
+    {
+      "name": "control_base",
+      "kind": "synthetic",
+      "seed": 20261029,
+      "relative_frobenius": {
+        "e4_tile": 0.047433735318131776,
+        "e4_rotate": 0.05324091833757163,
+        "e4_smooth_tile": 0.048694354055545,
+        "e4_smooth_rotate": 0.05064415197138722
+      }
+    },
+    {
+      "name": "control_bias",
+      "kind": "synthetic",
+      "seed": 20261029,
+      "relative_frobenius": {
+        "e4_tile": 0.09506749826960961,
+        "e4_rotate": 0.09556728117011735,
+        "e4_smooth_tile": 0.048694354055545,
+        "e4_smooth_rotate": 0.05064415197138722
+      }
+    },
+    {
+      "name": "control_constant",
+      "kind": "synthetic",
+      "seed": 20261029,
+      "relative_frobenius": {
+        "e4_tile": 0.026929126040528707,
+        "e4_rotate": 0.026929126040528707,
+        "e4_smooth_tile": 0.026929126040528707,
+        "e4_smooth_rotate": 0.026929126040528707
+      }
+    }
+  ]
+}

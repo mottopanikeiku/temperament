@@ -3,6 +3,8 @@
 import json
 from pathlib import Path
 
+from study.accuracy.report import intervention_table
+
 ROOT = Path(__file__).resolve().parents[1]
 PLANS = ("plan.json", "qwen14-plan.json", "smol17-plan.json")
 
@@ -63,3 +65,34 @@ def test_readme_headline_changes_match_summary():
         "one H100, full-sequence per-head scales, and batch scoring "
         "rather than streaming generation"
     ) in readme
+
+
+def test_readme_direct_contrast_table_matches_every_committed_interval():
+    summary = json.loads((ROOT / "results/accuracy/summary.json").read_text())
+    readme = (ROOT / "README.md").read_text()
+    table = readme.split("<!-- interventions:start -->\n")[1].split("\n<!-- interventions:end -->")[
+        0
+    ]
+    assert len(summary["interventions"]) == 8 * 3 * 4
+    assert table == intervention_table(summary)
+
+
+def test_readme_direct_headline_matches_committed_interventions():
+    summary = json.loads((ROOT / "results/accuracy/summary.json").read_text())
+    rows = {
+        (row["model"], row["task"], row["candidate_variant"], row["baseline_variant"]): row
+        for row in summary["interventions"]
+    }
+    readme = (ROOT / "README.md").read_text()
+    for task in ("hellaswag", "mmlu"):
+        row = rows["qwen7", task, "rotate", "tile"]
+        delta, low, high = (
+            f"{100 * value:+.2f}".replace("-", "−") for value in (row["delta"], *row["ci95"])
+        )
+        assert f"**{delta}pp**" in readme
+        assert f"**[{low}, {high}]**" in readme
+    row = rows["qwen7", "hellaswag", "rotate_smooth_k", "smooth_k"]
+    delta, low, high = (
+        f"{100 * value:+.2f}".replace("-", "−") for value in (row["delta"], *row["ci95"])
+    )
+    assert f"**{delta}pp [{low}, {high}]**" in readme
