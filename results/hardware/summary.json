@@ -191,7 +191,7 @@
           "tile": {
             "physical_heads": 918,
             "spearman": 0.9920517227150185,
-            "emulator_median_relative_fro": 0.09243052265978857,
+            "emulator_median_relative_fro": 0.09243052265978856,
             "kernel_median_relative_fro": 0.0955949685196906,
             "kernel_p90_relative_fro": 0.17547268590904538
           },
@@ -1078,7 +1078,7 @@
             "physical_heads": 128,
             "spearman": 0.9930244002929864,
             "emulator_median_relative_fro": 0.04347311423750634,
-            "kernel_median_relative_fro": 0.04291949080579197,
+            "kernel_median_relative_fro": 0.04291949080579198,
             "kernel_p90_relative_fro": 0.07067241095341185
           },
           "smooth_k": {
@@ -1664,7 +1664,7 @@
             "rotate": {
               "physical_heads": 336,
               "spearman": 0.994322157757208,
-              "emulator_median_relative_fro": 0.05661497460795536,
+              "emulator_median_relative_fro": 0.056614974607955365,
               "kernel_median_relative_fro": 0.05647122640714689,
               "kernel_p90_relative_fro": 0.08686600373797035
             },
@@ -3206,7 +3206,7 @@
           "tile": {
             "physical_heads": 918,
             "spearman": 0.8499869148887795,
-            "emulator_median_relative_fro": 0.09243052265978857,
+            "emulator_median_relative_fro": 0.09243052265978856,
             "kernel_median_relative_fro": 0.04140644497869825,
             "kernel_p90_relative_fro": 0.06965721769137076
           },
@@ -4679,7 +4679,7 @@
             "rotate": {
               "physical_heads": 336,
               "spearman": 0.8765755790779043,
-              "emulator_median_relative_fro": 0.05661497460795536,
+              "emulator_median_relative_fro": 0.056614974607955365,
               "kernel_median_relative_fro": 0.029535253436751042,
               "kernel_p90_relative_fro": 0.03871236550135715
             },

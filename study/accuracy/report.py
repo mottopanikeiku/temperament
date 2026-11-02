@@ -372,7 +372,7 @@ def summarize(plan, items, runs):
 
 
 def intervention_table(summary):
-    """Render all model/task direct contrasts in README-ready percentage points."""
+    """Render all model/task direct contrasts as a Markdown table."""
     headings = (
         "Rotate − plain",
         "Center − plain",
