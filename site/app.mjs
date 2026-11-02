@@ -18,7 +18,7 @@ function updateToy() {
   $('#weights').setAttribute('aria-label', data.exact.map((_, i) => `Key ${i + 1}: exact ${percent(data.exact[i])}, FP8 without rotation ${percent(data.plain[i])}, with rotation ${percent(data.rotated[i])}`).join('; '));
   $('#plain-error').textContent = percent(data.plainTV);
   $('#rotated-error').textContent = percent(data.rotatedTV);
-  $('#toy-description').textContent = smooth ? 'Mean subtraction removes the shared first coordinate. Moving it no longer changes either FP8 result.' : `At this setting, rotation ${data.rotatedTV > data.plainTV ? 'increases' : 'decreases'} weight error. Rounding makes the response jump rather than change smoothly.`;
+  $('#toy-description').textContent = smooth ? 'Mean subtraction removes the shared first coordinate, so moving it no longer changes either FP8 result.' : `At this setting rotation ${data.rotatedTV > data.plainTV ? 'increases' : 'decreases'} the weight error, and because of rounding the response jumps rather than changing smoothly.`;
   $('#vectors tbody').innerHTML = data.keys.map((key, i) => `<tr><th>${i + 1}</th>${[key, data.plainKeys[i], data.rotatedKeys[i]].map(row => `<td>[${row.map(x => x.toFixed(2)).join(', ')}]</td>`).join('')}</tr>`).join('');
 }
 $('#shared').addEventListener('input', updateToy);
@@ -107,7 +107,7 @@ try {
   if (!response.ok) throw new Error(`Data request failed: ${response.status}`);
   $('#accuracy-result').textContent = accuracySummary(await response.json());
 } catch {
-  $('#accuracy-result').textContent = 'I could not load the accuracy measurements. The linked study has the committed results.';
+  $('#accuracy-result').textContent = 'I could not load the accuracy measurements, but the linked study has the committed results.';
 }
 try {
   const response = await fetch(new URL('./heads.json', import.meta.url));
@@ -117,6 +117,6 @@ try {
   updateLayers();
   updateFilters();
 } catch {
-  $('#head-count').textContent = 'I could not load the measurements. Reload the page, or read results/v2/heads.csv in the repository.';
+  $('#head-count').textContent = 'I could not load the measurements, so reload the page or read results/v2/heads.csv in the repository.';
   for (const selector of ['#model', '#layer', '#group', '#previous', '#next']) $(selector).disabled = true;
 }
