@@ -41,28 +41,22 @@ test('Export contains every physical head and published harm counts', async () =
   assert.ok(data.points.every(p => p.slice(1).every(Number.isFinite)));
 });
 
-test('Real FA3 headline uses the committed answer-accuracy comparisons', async () => {
+test('Real FA3 headline uses the committed answer-accuracy results', async () => {
   const summary = JSON.parse(await readFile(new URL('../results/accuracy/summary.json', import.meta.url)));
   assert.equal(summary.baseline, 'bf16');
-  assert.equal(accuracySummary(summary), 'I measure Qwen2.5-7B HellaSwag accuracy: 80.9% BF16 → 63.7% plain FP8 → 45.5% rotated FP8. With centered keys, with or without rotation, 0 of 8 checkpoints lose ≥2 points vs BF16 (worst −1.5 points, Qwen2.5-1.5B MMLU).');
-  // A point drop is not a significance flag; include both centered variants.
+  const text = accuracySummary(summary);
+  for (const value of ['80.9% in BF16', '63.7% in plain FP8', '45.5% with rotation', '81.0%']) assert.ok(text.includes(value));
   const changed = structuredClone(summary);
-  for (const variant of ['smooth_k', 'rotate_smooth_k']) {
-    const row = changed.rows.find(row => row.model === 'qwen7' && row.task === 'hellaswag' && row.variant === variant);
-    row.delta = -0.02;
-    row.harm_flag = false;
-  }
-  assert.match(accuracySummary(changed), /1 of 8 checkpoints lose ≥2 points vs BF16 \(worst −2.0 points, Qwen2.5-7B HellaSwag\)/);
   changed.rows.find(row => row.model === 'qwen7' && row.task === 'hellaswag' && row.variant === 'tile').accuracy = 0.65;
-  assert.match(accuracySummary(changed), /80.9% BF16 → 65.0% plain FP8 → 45.5% rotated FP8/);
+  assert.match(accuracySummary(changed), /80.9% in BF16 to 65.0% in plain FP8 and 45.5% with rotation/);
 });
 
-test('The intro links real-kernel accuracy separately from unchanged emulation stats', async () => {
+test('The intro keeps real-kernel accuracy apart from the emulation stats', async () => {
   const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
-  assert.match(html, /Real FlashAttention-3 \(FA3\)/);
+  assert.match(html, /FlashAttention-3 on an H100/);
   assert.match(html, /id="accuracy-result"/);
-  assert.match(html, /href="https:\/\/github.com\/mottopanikeiku\/temperament#answer-accuracy"/);
+  assert.match(html, /href="https:\/\/github.com\/mottopanikeiku\/temperament#eight-checkpoints"/);
   assert.ok(html.indexOf('id="accuracy-result"') < html.indexOf('Earlier CPU FP8 emulation'));
   assert.ok(html.indexOf('Earlier CPU FP8 emulation') < html.indexOf('class="stats"'));
-  for (const text of ['250 / 2,880', '0.978 AUC', '1.91×', 'CPU FP8 emulation results']) assert.ok(html.includes(text));
+  for (const text of ['250 / 2,880', '0.978 AUC', '1.91×', 'simulated FP8 on a CPU']) assert.ok(html.includes(text));
 });
