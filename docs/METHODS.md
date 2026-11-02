@@ -4,11 +4,15 @@ Python 3.13 and `uv`. The lockfile pins everything. Reports run on a CPU from th
 
 ## Accuracy study
 
-**Items.** All 1,172 ARC-Challenge test items, 2,000 uniformly sampled HellaSwag validation items, and 2,000 MMLU test items stratified by subject. Seed 20261007; `data/accuracy/selection.json` lists every item ID.
+The items are all 1,172 ARC-Challenge test items, 2,000 uniformly sampled HellaSwag validation items, and 2,000 MMLU test items stratified by subject, drawn with seed 20261007; `data/accuracy/selection.json` lists every item ID.
 
-**Prompts and scoring.** Zero-shot, no chat template, following lm-evaluation-harness v0.4.9.2. ARC and HellaSwag use length-normalized continuation log-likelihood (`acc_norm`); MMLU compares A–D label likelihoods (`acc`). Batches hold equal-length inputs without padding.
+Prompts are zero-shot with no chat template, following lm-evaluation-harness v0.4.9.2. ARC and HellaSwag use length-normalized continuation log-likelihood (`acc_norm`); MMLU compares A–D label likelihoods (`acc`). Batches hold equal-length inputs without padding.
 
-**Attention.** Every layer's attention goes through FA3's E4M3 API, with one kernel call per layer. Projections, RoPE, norms and MLPs stay BF16, and the baseline is native BF16 SDPA. Variants, named as in the result files:
+`data/accuracy/models.json` pins the first six checkpoints; Qwen2.5-14B and SmolLM2-1.7B come from `qwen14-plan.json` and `smol17-plan.json`. Qwen2.5-3B is under the noncommercial Qwen research license; the rest are Apache-2.0.
+
+### Attention variants
+
+Every layer's attention goes through FA3's E4M3 API, with one kernel call per layer. Projections, RoPE, norms and MLPs stay BF16, and the baseline is native BF16 SDPA. Variants, named as in the result files:
 
 | Name | Q/K preprocessing |
 |---|---|
@@ -19,11 +23,11 @@ Python 3.13 and `uv`. The lockfile pins everything. Reports run on a CPU from th
 
 Scales and means use the whole sequence, including later tokens, so scoring is per batch and not streaming.
 
-**Statistics.** Each variant is compared with BF16 on identical items using 20,000 paired bootstrap resamples and percentile 95% intervals. A checkpoint/task is flagged when the drop is at least 2 points and the interval's upper end is below zero. The four direct comparisons (rotate vs plain, center vs plain, center vs rotated, rotate vs centered) pair the same items and change one thing at a time. There is no multiple-comparison correction.
+### Statistics
 
-**Models.** `data/accuracy/models.json` pins the first six checkpoints; Qwen2.5-14B and SmolLM2-1.7B come from `qwen14-plan.json` and `smol17-plan.json`. Qwen2.5-3B is under the noncommercial Qwen research license; the rest are Apache-2.0.
+Each variant is compared with BF16 on identical items using 20,000 paired bootstrap resamples and percentile 95% intervals. A checkpoint/task is flagged when the drop is at least 2 points and the interval's upper end is below zero. The four direct comparisons (rotate vs plain, center vs plain, center vs rotated, rotate vs centered) pair the same items and change one thing at a time. There is no multiple-comparison correction.
 
-**Rebuild the report (CPU):**
+### Rebuild the report on a CPU
 
 ```sh
 uv sync --locked --python 3.13
@@ -34,7 +38,9 @@ uv run python -m study.accuracy.report \
 
 This rewrites `results/accuracy/summary.json` and the figures, and prints every paired comparison.
 
-**Re-score on an H100** (allocates paid cloud resources; `--plan` picks the model set):
+### Re-score on an H100
+
+These commands allocate paid cloud resources; `--plan` picks the model set.
 
 ```sh
 uv sync --locked --extra capture --extra hardware --python 3.13

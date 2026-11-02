@@ -1,10 +1,10 @@
 # temperament
 
-FlashAttention-3's FP8 attention drops Qwen2.5-7B-Instruct from 81% to 64% on HellaSwag. Subtracting the mean key before quantizing, which leaves exact attention unchanged, brings it back to 81%.
+On an H100, batch scoring Qwen2.5-7B-Instruct with FlashAttention-3's FP8 attention (scales and key means taken over the full sequence) drops HellaSwag accuracy from 81% to 64%; subtracting the mean key before quantizing brings it back to 81%. Centering leaves exact attention unchanged. The statistics include later tokens, so the result is for batch scoring, not streaming generation.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="docs/hero-dark.svg"><img alt="Qwen2.5-7B HellaSwag accuracy with FlashAttention-3 on one H100: 80.9% BF16, 63.7% FP8, 45.5% FP8 with rotated queries and keys, 81.0% with centered keys and rotation." src="docs/hero-light.svg" width="600"></picture>
 
-These runs use FA3's FP8 kernel on one H100 and score ARC-Challenge, HellaSwag and MMLU zero-shot. Only attention changes; projections, RoPE, norms and MLPs stay in BF16. Qwen2.5-7B-Instruct, accuracy in percent:
+Each run scores ARC-Challenge, HellaSwag and MMLU zero-shot. Only attention changes; projections, RoPE, norms and MLPs stay in BF16. Qwen2.5-7B-Instruct, accuracy in percent:
 
 | Attention | ARC-Challenge | HellaSwag | MMLU |
 |---|---:|---:|---:|
@@ -32,7 +32,7 @@ Plain FP8 hurts two of the eight checkpoints badly (Qwen2.5-1.5B and 7B, up to 2
 
 ![Accuracy change from BF16 for all eight checkpoints, with paired 95% intervals](results/accuracy/paired-change.svg)
 
-Red marks a drop of at least 2 points whose paired 95% interval stays below zero. HellaSwag and MMLU are fixed 2,000-item samples. Scales and key means come from the full sequence, so this is batch scoring, not streaming generation. The Qwens are instruction-tuned; the other families are base models.
+Red marks a drop of at least 2 points whose paired 95% interval stays below zero. HellaSwag and MMLU are fixed 2,000-item samples. The Qwens are instruction-tuned; the other families are base models.
 
 ## Rebuild the report
 
